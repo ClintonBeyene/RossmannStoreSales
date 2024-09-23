@@ -15,17 +15,36 @@ def load_data(train_file, test_file, store_file):
     store_df = pd.read_csv(store_file)
     return train_df, test_df, store_df
 
-def exploratory_data_analysis(df_train, df_test, df_store):
-    """Perform exploratory data analysis"""
-    # Check distribution of sales in training and test sets
-    sns.set()
-    plt.figure(figsize=(10,6))
-    sns.histplot(df_train['Promo'], label='Training Set', kde=True)
-    sns.histplot(df_test['Promo'], label='Test Set', kde=True)
-    plt.title('Distribution of Promotion in Training and Test Sets')
-    plt.legend()
+def promo_distribution(df_train, df_test):    
+    # Set the aesthetic style of the plots
+    sns.set(style="whitegrid")
+
+    # Create a figure and axis
+    fig, axes = plt.subplots(1, 2, figsize=(16, 8), sharey=True)
+
+    # Plot the distribution of promotions in the training set
+    sns.countplot(x='Promo', data=df_train, ax=axes[0], hue='Promo', palette='Blues', dodge=False)
+    axes[0].set_title('Promo Distribution in Training Set')
+    axes[0].set_xlabel('Promotion Indicator')
+    axes[0].set_ylabel('Count')
+    axes[0].legend().set_visible(False)
+    axes[0].set_xticks([0, 1])
+    axes[0].set_xticklabels(['No Promo', 'Promo'])
+
+    # Plot the distribution of promotions in the test set
+    sns.countplot(x='Promo', data=df_test, ax=axes[1], hue='Promo', palette='Oranges', dodge=False)
+    axes[1].set_title('Promo Distribution in Test Set')
+    axes[1].set_xlabel('Promotion Indicator')
+    axes[1].legend().set_visible(False)
+    axes[1].set_xticks([0, 1])
+    axes[1].set_xticklabels(['No Promo', 'Promo'])
+
+    # Add a main title
+    fig.suptitle('Comparison of Promotion Distribution in Training and Test Sets', fontsize=16)
+
     plt.show()
 
+def sales_behaviour(df_train):
     # Check sales behavior before, during, and after holidays
     holiday_sales = df_train[df_train['StateHoliday']!= 0]['Sales']
     non_holiday_sales = df_train[df_train['StateHoliday'] == 0]['Sales']
@@ -37,6 +56,7 @@ def exploratory_data_analysis(df_train, df_test, df_store):
     plt.legend()
     plt.show()
 
+def seasonal_purchase(df_train):
     # Check seasonal purchase behaviors
     df_train['Month'] = df_train['Date'].dt.month
     df_train['Year'] = df_train['Date'].dt.year  
@@ -47,10 +67,15 @@ def exploratory_data_analysis(df_train, df_test, df_store):
     plt.title('Seasonal Purchase Behaviors')
     plt.show()
 
+def sales_vs_customer(df_train):
     # Check correlation between sales and number of customers
     correlation = df_train['Sales'].corr(df_train['Customers'])
     logger.info("Correlation between sales and number of customers: %s", correlation)
-
+    plt.figure(figsize=(15,10))
+    sns.scatterplot(x=df_train.Sales, y=df_train.Customers)           
+    plt.title("Correlation between sales and number of customers")
+    
+def promo_effect_on_sales(df_train):
     # Check promo effect on sales
     promo_sales = df_train[df_train['Promo'] == 1]['Sales']
     non_promo_sales = df_train[df_train['Promo'] == 0]['Sales']
@@ -62,26 +87,33 @@ def exploratory_data_analysis(df_train, df_test, df_store):
     plt.legend()
     plt.show()
 
-    # Check trends of customer behavior during store opening and closing times
+def customer_behaviour(df_train):
+    # Check trends of customer behavior during store opening times
     opening_sales = df_train[df_train['Open'] == 1]['Sales']
-    closing_sales = df_train[df_train['Open'] == 0]['Sales']
+
+    # Plotting
     sns.set()
-    plt.figure(figsize=(10,6))
-    sns.histplot(opening_sales, label='Opening Sales', kde=True)
-    sns.histplot(closing_sales, label='Closing Sales', kde=True)
-    plt.title('Customer Behavior During Store Opening and Closing Times')
+    plt.figure(figsize=(10, 6))
+    sns.histplot(opening_sales, label='Opening Sales', kde=True, color='blue')
+    plt.title('Customer Behavior During Store Opening Times')
     plt.legend()
     plt.show()
 
-    # Check which stores are open on all weekdays
+def stores_open_all_weekdays(df_train):
+    # Check which stores are open on all weekdays 
     weekday_stores = df_train.groupby('Store')['DayOfWeek'].nunique()
-    open_all_weekdays = weekday_stores[weekday_stores == 5].index
+    open_all_weekdays = weekday_stores[weekday_stores == 7].index  
+
     sns.set()
-    plt.figure(figsize=(10,6))
-    sns.countplot(x='Store', data=df_train[df_train['Store'].isin(open_all_weekdays)]) 
+    plt.figure(figsize=(10, 6))
+    
+    # Plotting the count of stores open on all weekdays
+    sns.countplot(x='Store', data=df_train[df_train['Store'].isin(open_all_weekdays)])
     plt.title('Stores Open on All Weekdays')
+    plt.xticks(rotation=90)  # Rotate x-axis labels if there are many stores
     plt.show()
 
+def effect_of_assortment_on_sales(df_train, df_store):
     # Check how assortment type affects sales
     df_merged = pd.merge(df_train, df_store, on='Store')
     assortment_sales = df_merged.groupby('Assortment')['Sales'].sum()
@@ -91,6 +123,10 @@ def exploratory_data_analysis(df_train, df_test, df_store):
     plt.title('Effect of Assortment Type on Sales')
     plt.show()
 
+def effect_of_competitor_distance_on_sales(df_train, df_store):
+    df_store = df_store[df_store['CompetitionDistance'] != 0]
+    df_store = df_store[df_store['Store'] != 0]
+    df_merged = pd.merge(df_train, df_store, on='Store')
     # Grouping sales by the distance to the next competitor
     distance_sales = df_merged.groupby('CompetitionDistance')['Sales'].sum()
 
@@ -105,7 +141,10 @@ def exploratory_data_analysis(df_train, df_test, df_store):
     plt.ylabel('Total Sales')
     plt.show()
 
-
+def effect_of_new_competitors(df_train, df_store):
+    df_store = df_store[df_store['CompetitionOpenSinceYear'] != 0]
+    df_store = df_store[df_store['Store'] != 0]
+    df_merged = pd.merge(df_train, df_store, on='Store')
     # Grouping sales by the year competitors opened
     new_competitor_sales = df_merged.groupby('CompetitionOpenSinceYear')['Sales'].sum()
 
