@@ -22,14 +22,11 @@ The analysis is divided into several sections:
  * Checking trends of customer behavior during store opening and closing times
  * Checking which stores are open on all weekdays
  * Checking how assortment type affects sales
-### Results
+### Results on EDA
 The results of the analysis are presented in the form of plots and tables.
 
-### Conclusion
+### Conclusion on EDA
 The analysis provides insights into the sales patterns of the Rossmann stores and can be used to inform business decisions.
-
-### Next Steps
-The next steps in the analysis are:
 
 #### Task 2: Feature Engineering
 * **Feature Engineering**: This task involves creating new features that can be used to improve the accuracy of the sales prediction model.
